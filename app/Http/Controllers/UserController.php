@@ -27,7 +27,7 @@ class UserController extends Controller
     public function getProfil()
     {
         $user = \Auth::user();
-        
+
         $education = $user->education()->get();
 
         $job = $user->job()->get();
@@ -47,7 +47,7 @@ class UserController extends Controller
     }
 
     public function putProfil(Request $request)
-    {           
+    {
         $this->validate($request, [
             'image' => 'image|max:1024',
             'name' => 'required',
@@ -59,12 +59,12 @@ class UserController extends Controller
             'address' => 'required',
             'height' => 'numeric',
             'weight' => 'numeric'
-        ]); 
+        ]);
 
         $this->updateProfil($request);
 
         return redirect()->back();
-    }    
+    }
 
     public function getIndex()
     {
@@ -73,11 +73,10 @@ class UserController extends Controller
     }
 
     public function getInformasi($id = null)
-    {        
+    {
         $recommend = $this->RekomendasiInformasi();
 
-        if($id != null)
-        {
+        if ($id != null) {
             $info = Information::findOrFail($id);
 
             $read = $info->read;
@@ -86,37 +85,37 @@ class UserController extends Controller
                 'read' => $read + 1
             ]);
 
-            $industry = Information::find($id)->industry()->first();            
+            $industry = Information::find($id)->industry()->first();
 
-            $view = 'information.user.detail';            
-        }else{
+            $view = 'information.user.detail';
+        } else {
             $info = Information::where('hidden', 0)
-                ->latest('created_at')                
+                ->latest('created_at')
                 ->paginate(15);
             $view = 'information.user.index';
             $industry = null;
-        }        
-        
+        }
+
         return view($view, [
             'informations' => $info,
             'recommends' => $recommend,
-            $industry == null? :'industry' => $industry,
+            $industry == null ?: 'industry' => $industry,
             'url' => $this->requests->path(),
             'id' => $id
-        ]);         
+        ]);
     }
 
     public function getDownloadPdf($id = null)
-    {      
+    {
         $informasi = Information::find($id);
 
         $pdf = \App::make('dompdf.wrapper');
 
         $pdf->loadView('information.pdf', [
             'information' => $informasi
-            ]);
+        ]);
 
-        return $pdf->download($informasi->title.'.pdf');        
+        return $pdf->download($informasi->title . '.pdf');
         // return view('information.pdf', ['information' => $informasi]);
     }
 
@@ -131,16 +130,16 @@ class UserController extends Controller
         $birthday = Auth::user()->birthday;
 
         $age = \Carbon\Carbon::createFromFormat('Y-m-d', $birthday)->age;
-        
-        $position = \App\Position::query();        
+
+        $position = \App\Position::query();
 
         $delimiters = [",", " "];
 
         /* lokasi peminatan siswa */
-        $user_location = Auth::user()->location;        
+        $user_location = Auth::user()->location;
 
         $ready = str_replace($delimiters, $delimiters[0], $user_location);
-        
+
         $locations = explode($delimiters[0], $ready);
 
 
@@ -148,33 +147,35 @@ class UserController extends Controller
         $user_skill = Auth::user()->skill;
 
         $ready = str_replace($delimiters, $delimiters[0], $user_skill);
-        
+
         $skills = explode($delimiters[0], $ready);
 
-        $position->join('information', 'position.information_id', '=', 'information.id');                
+        $position->join('information', 'position.information_id', '=', 'information.id');
 
         $position->where('min_age', '<=', $age)
-                    ->where('max_age', '>=', $age)
-                    ->where('sex','LIKE', '%'.$sex.'%')
-                    ->where('position.height', '<=', $height)
-                    ->where('position.weight', '>=', $weight)
-                    ->where('information.deadline', '>=', date('Y-m-d'))
-                    ->where('hidden', 0)
-                    ->where(function ($query) use ($locations) {
-                        foreach ($locations as $location) {
-                            if($location !=null) $query->orWhere('location', 'LIKE', '%'.$location.'%');                        
-                        }
-                        return $query;
-                    })->where(function ($query) use ($skills){
-                        foreach ($skills as $skill) {
-                            if($skill !=null) $query->where('skill', 'LIKE', '%'.$skill.'%');
-                        }
-                        return $query;
-                    });
+            ->where('max_age', '>=', $age)
+            ->where('sex', 'LIKE', '%' . $sex . '%')
+            ->where('position.height', '<=', $height)
+            ->where('position.weight', '>=', $weight)
+            ->where('information.deadline', '>=', date('Y-m-d'))
+            ->where('hidden', 0)
+            // ->where(function ($query) use ($locations) {
+                // foreach ($locations as $location) {
+                //     if ($location != null) $query->orWhere('location', 'LIKE', '%' . $location . '%');
+                // }
+                // return $query->get();
+            // })->where(function ($query) use ($skills) {
+            //     dd($query);
+            //     // foreach ($skills as $skill) {
+            //     //     if ($skill != null) $query->where('skill', 'LIKE', '%' . $skill . '%');
+            //     // }
+            //     return $query;
+            // });
+            ;
 
         return $position->groupBy('position.information_id')
-                    ->take(5)                    
-                    ->get();
+            ->take(5)
+            ->get();
     }
 
     public function putPasswordReset(Request $request)
@@ -182,19 +183,17 @@ class UserController extends Controller
         $this->validate($request, [
             'old_password' => 'required',
             'password' => 'required|confirmed'
-        ]);        
-        
+        ]);
+
         $old_password = Auth::user()->password;
 
-        if(\Hash::check($request->get('old_password'), $old_password))
-        {            
+        if (\Hash::check($request->get('old_password'), $old_password)) {
             Auth::user()->update([
                 'password' => bcrypt($request->get('password'))
             ]);
 
             session()->flash('msgInfo', 'Password telah diganti');
-
-        }else{
+        } else {
             session()->flash('msgError', 'Password lama salah');
         }
 
@@ -202,9 +201,9 @@ class UserController extends Controller
     }
 
     public function postLamar($id)
-    {        
+    {
         $information = Information::find($id);
-     
+
         $user = Auth::user();
 
         $information->applicant()->attach([$user->id => ['status' => 'Menunggu']]);
@@ -222,15 +221,15 @@ class UserController extends Controller
             'proposals' => $user->applicant,
             'recommends' => $recommend,
             'url' => 'Alumni/Lamar'
-        ]);        
+        ]);
     }
 
     public function getDownloadCv()
     {
         $user = \Auth::user();
-        
+
         return $this->usercv($user);
-    } 
+    }
 
     public function usercv($user)
     {
@@ -239,7 +238,7 @@ class UserController extends Controller
         $score = $user->score()->first();
 
         $pdf = \App::make('dompdf.wrapper');
-        
+
 
         $pdf->loadView('user.cv', [
             'user' => $user,
@@ -248,7 +247,7 @@ class UserController extends Controller
             'scores' => $score
         ]);
 
-        return $pdf->download($user->name.'.pdf');
+        return $pdf->download($user->name . '.pdf');
         /*return view('user.cv', [
             'user' => $user,
             'educations' => $education,
@@ -274,17 +273,17 @@ class UserController extends Controller
 
         $user_score = Auth::user()->score()->get();
 
-        if($user_score->isEmpty())
+        if ($user_score->isEmpty())
             Auth::user()->score()->create($request->all());
         else
-            Auth::user()->score()->update($request->except(['_method','_token']));
+            Auth::user()->score()->update($request->except(['_method', '_token']));
 
         return redirect()->back();
     }
 
     public function postUpdatesekolah(Request $request)
     {
-        $this->validate($request,[
+        $this->validate($request, [
             'level' => 'required',
             'institute' => 'required',
             'entrance' => 'required|numeric',
@@ -305,7 +304,7 @@ class UserController extends Controller
 
     public function postTambahkerja(Request $request)
     {
-        $this->validate($request,[        
+        $this->validate($request, [
             'institute' => 'required',
             'entrance' => 'required|numeric',
             'out' => 'required|numeric'
@@ -338,20 +337,20 @@ class UserController extends Controller
     }
 
     public function getPemberitahuan($param = null)
-    {        
-        if($param == 'semua'){
+    {
+        if ($param == 'semua') {
             $notif = Auth::user()->applicant()
-                            ->where('status', '!=', 'Menunggu')
-                            ->with(['industry'=>function($query){
-                                $query->select('id','name');
-                            }])->get();
-        }else{
+                ->where('status', '!=', 'Menunggu')
+                ->with(['industry' => function ($query) {
+                    $query->select('id', 'name');
+                }])->get();
+        } else {
             $notif = Auth::user()->applicant()
-                            ->where('status', '!=', 'Menunggu')
-                            ->wherePivot('read', 0)
-                            ->with(['industry'=>function($query){
-                                $query->select('id','name');
-                            }])->get();
+                ->where('status', '!=', 'Menunggu')
+                ->wherePivot('read', 0)
+                ->with(['industry' => function ($query) {
+                    $query->select('id', 'name');
+                }])->get();
         }
 
         $applicants = Auth::user()->applicant()->wherePivot('read', 0)->get();
@@ -361,15 +360,15 @@ class UserController extends Controller
             $applicant->pivot->update(['read' => 1]);
         }
 
-        return view('user.notification', ['notifs'=>$notif,'param'=>$param,'url' => $this->requests->path()]);
+        return view('user.notification', ['notifs' => $notif, 'param' => $param, 'url' => $this->requests->path()]);
     }
 
     public static function notifCount()
     {
         $notif = Auth::user()->applicant()
-                            ->where('status', '!=', 'Menunggu')
-                            ->wherePivot('read', 0)
-                            ->get(['id']);
+            ->where('status', '!=', 'Menunggu')
+            ->wherePivot('read', 0)
+            ->get(['id']);
 
         return count($notif);
     }
@@ -385,7 +384,7 @@ class UserController extends Controller
     public function getTolak($id)
     {
         $information = Information::findOrFail($id);
-        Auth::user()->applicant()->updateExistingPivot($information->id, ['confirm' => 2]);   
+        Auth::user()->applicant()->updateExistingPivot($information->id, ['confirm' => 2]);
         return redirect()->back();
     }
 }

@@ -22,20 +22,9 @@
         <div class="navbar-custom-menu">
             <ul class="nav navbar-nav">
             @if(Auth::check())
-                {{-- @if(Auth::user()->is('alumni'))
+                @if(Auth::user()->is('alumni'))
                     <li><a href="{{ url('/alumni/lamar') }}">Lamaran Saya <i class="fa fa-hand-o-up"></i></a></li>
-                @endif --}}
-
-                @if(Auth::user()->is('Admin'))
-                <!-- Messages: style can be found in dropdown.less-->
-                <li class="dropdown messages-menu">
-                    <!-- Menu toggle button -->
-                    <a target="_blank" href="https://leona.rapidplex.com:2096/" title="Email">
-                        <i class="fa fa-envelope-o"></i>
-                        <span class="label label-success"></span>
-                    </a>                    
-                </li><!-- /.messages-menu -->
-                @endif                        
+                @endif              
             @endif
 
                 @if (Auth::guest())

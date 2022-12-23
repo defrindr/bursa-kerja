@@ -18,13 +18,17 @@ class CreateDepartmentTable extends Migration
             $table->timestamps();
         });
 
-        DB::table('department')->insert([
+        $data = [[
             'name' => 'Rekayasa Perangkat Lunak'
         ], [
             'name' => 'Multimedia'
         ], [
             'name' => 'Bisnis Kontruksi dan Bangunan'
-        ]);
+        ]];
+
+        foreach ($data as $d) {
+            DB::table('department')->insert($d);
+        }
     }
 
     /**
